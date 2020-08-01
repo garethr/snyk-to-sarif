@@ -33,11 +33,11 @@ def find_line_number(path, data, key):
 parser = argparse.ArgumentParser(description="Convert Snyk JSON output to SARIF")
 parser.add_argument("input", type=str, help="Path to the Snyk JSON file")
 parser.add_argument(
-    "--dockerfile",
+    "--file",
     metavar="path",
     type=str,
     default="Dockerfile",
-    help="Path to Dockerfile (default: Dockerfile)",
+    help="Path to file under test (default: Dockerfile)",
 )
 parser.add_argument(
     "--output",
@@ -56,7 +56,7 @@ else:
     with open(args.input) as handle:
         snyk = json.load(handle)
 
-dockerfile_path = args.dockerfile
+manifest_file_path = args.file
 
 rules = {}
 results = []
@@ -88,7 +88,7 @@ for vuln in snyk["vulnerabilities"]:
         f"{severity.capitalize()} severity {title} vulnerability in {package_name}"
     )
     full_description = f"({cve}) {name}@{version}" if cve else f"{name}@{version}"
-    message = f"This Dockerfile introduces a vulnerable {package_name} package with a {severity} severity vulnerability."
+    message = f"This file introduces a vulnerable {package_name} package with a {severity} severity vulnerability."
 
     rules[vuln["id"]] = {
         "id": vuln["id"],
@@ -106,8 +106,8 @@ for vuln in snyk["vulnerabilities"]:
         "properties": {"tags": tags},
     }
 
-    instruction_line = find_line_number(dockerfile_path, vuln, "dockerfileInstruction")
-    from_line = find_line_number(dockerfile_path, vuln, "dockerBaseImage")
+    instruction_line = find_line_number(manifest_file_path, vuln, "dockerfileInstruction")
+    from_line = find_line_number(manifest_file_path, vuln, "dockerBaseImage")
 
     line = instruction_line or from_line or 1
 
@@ -118,7 +118,7 @@ for vuln in snyk["vulnerabilities"]:
         "locations": [
             {
                 "physicalLocation": {
-                    "artifactLocation": {"uri": dockerfile_path,},
+                    "artifactLocation": {"uri": manifest_file_path},
                     "region": {"startLine": line},
                 }
             }

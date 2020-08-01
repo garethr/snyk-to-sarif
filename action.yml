@@ -8,8 +8,8 @@ inputs:
   input:
     description: "Where to find the Snyk JSON file"
     default: "snyk.json"
-  dockerfile:
-    description: "Location of the related Dockerfile in the repository"
+  file:
+    description: "Location of the related file in the repository"
     default: "Dockerfile"
   output:
     description: "Where to save the SARIF file to"
@@ -19,7 +19,7 @@ runs:
   image: "Dockerfile"
   args:
   - ${{ inputs.input }}
-  - --dockerfile
+  - --file
   - ${{ inputs.dockerfile }}
   - -o
   - ${{ inputs.output }}
