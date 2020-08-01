@@ -20,6 +20,6 @@ runs:
   args:
   - ${{ inputs.input }}
   - --file
-  - ${{ inputs.dockerfile }}
+  - ${{ inputs.file }}
   - -o
   - ${{ inputs.output }}
