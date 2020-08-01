@@ -1,0 +1,30 @@
+name: Test image with Snyk
+
+on:
+  push:
+    branches: [ master ]
+  workflow_dispatch:
+
+jobs:
+  snyk:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout the code
+      uses: actions/checkout@v2
+    - name: Build the image
+      env:
+          DOCKER_BUILDKIT: 1
+      run: docker build . -t snyk-to-sarif       
+    - name: Run Snyk to check image for vulnerabilities
+      uses: snyk/actions/docker@master
+      env:
+        SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+      with:
+        image: snyk-to-sarif
+        args: --file=Dockerfile
+        json: true
+    - uses: garethr/snyk-to-sarif@master
+    - name: Upload the SARIF file
+      uses: github/codeql-action/upload-sarif@v1
+      with:
+        sarif_file: snyk.sarif
