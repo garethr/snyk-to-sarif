@@ -68,7 +68,7 @@ for vuln in snyk["vulnerabilities"]:
     name = vuln["name"]
     package_name = vuln["packageName"]
     version = vuln["version"]
-    severity = vuln["severity"].capitalize()
+    severity = vuln["severity"]
 
     try:
         cwes = vuln["identifiers"]["CWE"]
@@ -88,7 +88,7 @@ for vuln in snyk["vulnerabilities"]:
         f"{severity.capitalize()} severity {title} vulnerability in {package_name}"
     )
     full_description = f"({cve}) {name}@{version}" if cve else f"{name}@{version}"
-    message = f"This Dockerfile introduces a vulnerable {package_name} package with a {severity} vulnerability."
+    message = f"This Dockerfile introduces a vulnerable {package_name} package with a {severity} severity vulnerability."
 
     rules[vuln["id"]] = {
         "id": vuln["id"],
