@@ -56,7 +56,7 @@ passed to the action using `with`.
 | Property | Default | Description |
 | --- | --- | --- |
 | input | snyk.json | Where to find the Snyk JSON file |
-| file | Dockerfile | Which file in the repository to associate the discovered issues with |
+| file | - | Which file in the repository to associate the discovered issues with. Most of this time this will be autodetected |
 | output | snyk.sarif | Where to save the resulting SARIF file |
 
 All have defaults so in many cases (like the one above) you shouldn't have to pass anything extra.
