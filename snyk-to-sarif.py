@@ -87,76 +87,134 @@ class SnykToSarif:
         rules = {}
         results = []
 
-        target_file = file_path or self.snyk["displayTargetFile"]
 
-        for vuln in self.snyk["vulnerabilities"]:
-            # SARIF only has error and warning levels for detected issues
-            # We set high severity issues as errors and everything else as warning
-            level = "error" if vuln["severity"] == "high" else "warning"
+        # Most Snyk JSON files will have known vulnerabilities
+        # but (for example) Infrastructure as Code projects won't
+        if "vulnerabilities" in self.snyk:
+            target_file = file_path or self.snyk["displayTargetFile"]
 
-            title = vuln["title"]
-            name = vuln["name"]
-            package_name = vuln["packageName"]
-            version = vuln["version"]
-            severity = vuln["severity"]
+            for vuln in self.snyk["vulnerabilities"]:
+                # SARIF only has error and warning levels for detected issues
+                # We set high severity issues as errors and everything else as warning
+                level = "error" if vuln["severity"] == "high" else "warning"
 
-            try:
-                cwes = vuln["identifiers"]["CWE"]
-            except KeyError:
-                cwes = []
+                title = vuln["title"]
+                name = vuln["name"]
+                package_name = vuln["packageName"]
+                version = vuln["version"]
+                severity = vuln["severity"]
 
-            tags = cwes + self.tags
-            # The security tag is used by GitHub to identify security issues
-            tags.append("security")
+                try:
+                    cwes = vuln["identifiers"]["CWE"]
+                except KeyError:
+                    cwes = []
 
-            try:
-                cve = vuln["identifiers"]["CVE"][0]
-            except KeyError:
-                cve = None
+                tags = cwes + self.tags
+                # The security tag is used by GitHub to identify security issues
+                tags.append("security")
 
-            short_description = f"{severity.capitalize()} severity {title} vulnerability in {package_name}"
-            full_description = (
-                f"({cve}) {name}@{version}" if cve else f"{name}@{version}"
-            )
-            message = f"This file introduces a vulnerable {package_name} package with a {severity} severity vulnerability."
+                try:
+                    cve = vuln["identifiers"]["CVE"][0]
+                except KeyError:
+                    cve = None
 
-            rules[vuln["id"]] = {
-                "id": vuln["id"],
-                # This appears as the title on the list and individual issue view
-                "shortDescription": {"text": short_description},
-                # This appears as a sub heading on the individual issue view
-                "fullDescription": {"text": full_description},
-                # This appears on the individual issue view in an expandable box
-                "help": {
-                    "markdown": vuln["description"],
-                    # This property is not used if markdown is provided, but is required
-                    "text": "",
-                },
-                "defaultConfiguration": {"level": level},
-                "properties": {"tags": tags},
-            }
+                short_description = f"{severity.capitalize()} severity {title} vulnerability in {package_name}"
+                full_description = (
+                    f"({cve}) {name}@{version}" if cve else f"{name}@{version}"
+                )
+                message = f"This file introduces a vulnerable {package_name} package with a {severity} severity vulnerability."
 
-            instruction_line = find_line_number(
-                target_file, vuln, "dockerfileInstruction"
-            )
-            from_line = find_line_number(target_file, vuln, "dockerBaseImage")
+                rules[vuln["id"]] = {
+                    "id": vuln["id"],
+                    # This appears as the title on the list and individual issue view
+                    "shortDescription": {"text": short_description},
+                    # This appears as a sub heading on the individual issue view
+                    "fullDescription": {"text": full_description},
+                    # This appears on the individual issue view in an expandable box
+                    "help": {
+                        "markdown": vuln["description"],
+                        # This property is not used if markdown is provided, but is required
+                        "text": "",
+                    },
+                    "defaultConfiguration": {"level": level},
+                    "properties": {"tags": tags},
+                }
 
-            line = instruction_line or from_line or 1
+                instruction_line = find_line_number(
+                    target_file, vuln, "dockerfileInstruction"
+                )
+                from_line = find_line_number(target_file, vuln, "dockerBaseImage")
 
-            result = {
-                "ruleId": vuln["id"],
-                # This appears in the line by line highlight on the individual issue view
-                "message": {"text": message},
-                "locations": [
-                    {
-                        "physicalLocation": {
-                            "artifactLocation": {"uri": target_file},
-                            "region": {"startLine": line},
+                line = instruction_line or from_line or 1
+
+                result = {
+                    "ruleId": vuln["id"],
+                    # This appears in the line by line highlight on the individual issue view
+                    "message": {"text": message},
+                    "locations": [
+                        {
+                            "physicalLocation": {
+                                "artifactLocation": {"uri": target_file},
+                                "region": {"startLine": line},
+                            }
                         }
+                    ],
+                }
+                results.append(result)
+
+        if  "infrastructureAsCodeIssues" in self.snyk:
+            target_file = file_path or self.snyk["targetFile"]
+
+            for issue in self.snyk["infrastructureAsCodeIssues"]:
+                if not issue["isIgnored"]:
+
+                    level = "error" if issue["severity"] == "high" else "warning"
+
+                    title = issue["title"]
+                    severity = issue["severity"]
+                    type_name = "kubernetes" if issue["type"] == "k8s" else issue["type"]
+                    sub_type = issue["subType"]
+                    short_description = f"{severity.capitalize()} severity {title}"
+                    full_description = f"{type_name.capitlalize()} {sub_type}"
+
+                    message = f"This line contains a potential {severity} severity misconfiguration affacting the {type.capitalize()} {subType}"
+
+                    tags = self.tags
+                    # The security tag is used by GitHub to identify security issues
+                    tags.append("security")
+                    tags.append(f"{type_name}/{sub_type}".lower())
+
+                    rules[issue["id"]] = {
+                        "id": issue["id"],
+                        # This appears as the title on the list and individual issue view
+                        "shortDescription": {"text": short_description},
+                        # This appears as a sub heading on the individual issue view
+                        "fullDescription": {"text": full_description},
+                        # This appears on the individual issue view in an expandable box
+                        "help": {
+                            "markdown": issue["description"],
+                            # This property is not used if markdown is provided, but is required
+                            "text": "",
+                        },
+                        "defaultConfiguration": {"level": level},
+                        "properties": {"tags": tags},
                     }
-                ],
-            }
-            results.append(result)
+
+
+                    result = {
+                        "ruleId": issue["id"],
+                        # This appears in the line by line highlight on the individual issue view
+                        "message": {"text": message},
+                        "locations": [
+                            {
+                                "physicalLocation": {
+                                    "artifactLocation": {"uri": target_file},
+                                    "region": {"startLine": issue["lineNumber"]},
+                                }
+                            }
+                        ],
+                    }
+                    results.append(result)
 
         return {
             "$schema": "https://raw.githubusercontent.com/oasis-tcs/sarif-spec/master/Schemata/sarif-schema-2.1.0.json",
