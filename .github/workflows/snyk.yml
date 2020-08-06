@@ -29,6 +29,10 @@ jobs:
       with:
         name: SARIF
         path: snyk.sarif
+    - uses: actions/upload-artifact@v2
+      with:
+        name: Snyk JSON output
+        path: snyk.json
     - name: Upload the SARIF file
       uses: github/codeql-action/upload-sarif@v1
       with:
