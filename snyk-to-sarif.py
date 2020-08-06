@@ -87,7 +87,6 @@ class SnykToSarif:
         rules = {}
         results = []
 
-
         # Most Snyk JSON files will have known vulnerabilities
         # but (for example) Infrastructure as Code projects won't
         if "vulnerabilities" in self.snyk:
@@ -162,7 +161,7 @@ class SnykToSarif:
                 }
                 results.append(result)
 
-        if  "infrastructureAsCodeIssues" in self.snyk:
+        if "infrastructureAsCodeIssues" in self.snyk:
             target_file = file_path or self.snyk["targetFile"]
 
             for issue in self.snyk["infrastructureAsCodeIssues"]:
@@ -172,7 +171,9 @@ class SnykToSarif:
 
                     title = issue["title"]
                     severity = issue["severity"]
-                    type_name = "kubernetes" if issue["type"] == "k8s" else issue["type"]
+                    type_name = (
+                        "kubernetes" if issue["type"] == "k8s" else issue["type"]
+                    )
                     sub_type = issue["subType"]
                     short_description = f"{severity.capitalize()} severity {title}"
                     full_description = f"{type_name.capitlalize()} {sub_type}"
@@ -199,7 +200,6 @@ class SnykToSarif:
                         "defaultConfiguration": {"level": level},
                         "properties": {"tags": tags},
                     }
-
 
                     result = {
                         "ruleId": issue["id"],
