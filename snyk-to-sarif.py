@@ -77,7 +77,7 @@ class SnykToSarif:
             with open(path) as handle:
                 self.snyk = json.load(handle)
 
-    def convert(self, manifest_file_path):
+    def convert(self, file_path):
         """
         Method to convert to SARIF. Maps the various fields from Snyk to the
         equivalent or similar in SARIF. This is optimised for GitHub Security
@@ -86,6 +86,8 @@ class SnykToSarif:
         """
         rules = {}
         results = []
+
+        target_file = file_path or self.snyk["displayTargetFile"]
 
         for vuln in self.snyk["vulnerabilities"]:
             # SARIF only has error and warning levels for detected issues
@@ -135,20 +137,20 @@ class SnykToSarif:
             }
 
             instruction_line = find_line_number(
-                manifest_file_path, vuln, "dockerfileInstruction"
+                target_file, vuln, "dockerfileInstruction"
             )
-            from_line = find_line_number(manifest_file_path, vuln, "dockerBaseImage")
+            from_line = find_line_number(target_file, vuln, "dockerBaseImage")
 
             line = instruction_line or from_line or 1
 
             result = {
                 "ruleId": vuln["id"],
                 # This appears in the line by line highlight on the individual issue view
-                "message": {"text": message,},
+                "message": {"text": message},
                 "locations": [
                     {
                         "physicalLocation": {
-                            "artifactLocation": {"uri": manifest_file_path},
+                            "artifactLocation": {"uri": target_file},
                             "region": {"startLine": line},
                         }
                     }
@@ -175,8 +177,7 @@ if __name__ == "__main__":
         "--file",
         metavar="path",
         type=str,
-        default="Dockerfile",
-        help="Path to file under test (default: Dockerfile)",
+        help="Path to file under test if different from Snyk JSON output",
     )
     parser.add_argument(
         "--output",
