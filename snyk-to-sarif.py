@@ -182,7 +182,7 @@ class SnykToSarif:
 
                     tags = self.tags
                     # The security tag is used by GitHub to identify security issues
-                    tags.append("security")
+                    tags = ["security"]
                     tags.append(f"{type_name}/{sub_type}".lower())
 
                     rules[issue["id"]] = {

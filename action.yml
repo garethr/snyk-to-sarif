@@ -10,7 +10,6 @@ inputs:
     default: "snyk.json"
   file:
     description: "Location of the related file in the repository"
-    default: "Dockerfile"
   output:
     description: "Where to save the SARIF file to"
     default: "snyk.sarif"
