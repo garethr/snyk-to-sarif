@@ -89,7 +89,7 @@ class SnykToSarif:
 
         # Most Snyk JSON files will have known vulnerabilities
         # but (for example) Infrastructure as Code projects won't
-        if "vulnerabilities" in self.snyk:
+        if "vulnerabilities" in self.snyk and self.snyk["vulnerabilities"]:
             target_file = file_path or self.snyk["displayTargetFile"]
 
             for vuln in self.snyk["vulnerabilities"]:
