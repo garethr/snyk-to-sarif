@@ -178,7 +178,7 @@ class SnykToSarif:
                     short_description = f"{severity.capitalize()} severity {title}"
                     full_description = f"{type_name.capitalize()} {sub_type}"
 
-                    message = f"This line contains a potential {severity} severity misconfiguration affacting the {type.capitalize()} {subType}"
+                    message = f"This line contains a potential {severity} severity misconfiguration affacting the {type_name.capitalize()} {sub_type}"
 
                     tags = self.tags
                     # The security tag is used by GitHub to identify security issues
