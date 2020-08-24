@@ -176,7 +176,7 @@ class SnykToSarif:
                     )
                     sub_type = issue["subType"]
                     short_description = f"{severity.capitalize()} severity {title}"
-                    full_description = f"{type_name.capitlalize()} {sub_type}"
+                    full_description = f"{type_name.capitalize()} {sub_type}"
 
                     message = f"This line contains a potential {severity} severity misconfiguration affacting the {type.capitalize()} {subType}"
 
